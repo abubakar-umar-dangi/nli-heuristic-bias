@@ -84,12 +84,17 @@ snli_test  = normalise_snli(snli_test)
 print("\nLabel distribution (train):")
 print(snli_train["gold_label"].value_counts())
 
-# HANS — loaded directly via HuggingFace (no local file dependency)
-hans_raw = load_dataset("hans", split="validation")
-hans_df = hans_raw.to_pandas().rename(
-    columns={"premise": "sentence1", "hypothesis": "sentence2"}
-)
-hans_df["gold_label"] = hans_df["label"].map({0: "entailment", 1: "non-entailment"})
+# HANS — official evaluation set (30,000 pairs) from the authors' repository.
+# The Hugging Face "hans" loader relies on a dataset script, which recent
+# versions of `datasets` no longer run, so the file is read directly.
+HANS_URL = ("https://raw.githubusercontent.com/tommccoy1/hans/master/"
+            "heuristics_evaluation_set.txt")
+hans_path = os.path.join(DATA, "heuristics_evaluation_set.txt")
+if not os.path.exists(hans_path):
+    import urllib.request
+    urllib.request.urlretrieve(HANS_URL, hans_path)
+hans_df = pd.read_csv(hans_path, sep="\t", quoting=3,
+                      usecols=["gold_label", "sentence1", "sentence2", "heuristic", "subcase"])
 
 print(f"\nHANS shape: {hans_df.shape}")
 print("HANS label distribution:")
@@ -209,8 +214,8 @@ print(split_summary.to_string(index=False))
 # Reasonable dev subset for fast Colab iteration (seed-fixed, label-balanced)
 DEV_SIZE = 10_000
 snli_dev = (
-    snli_train.groupby("label_bin", group_keys=False)
-    .apply(lambda g: g.sample(min(len(g), DEV_SIZE // 2), random_state=SEED))
+    snli_train.groupby("label_bin")
+    .sample(n=DEV_SIZE // 2, random_state=SEED)
     .reset_index(drop=True)
 )
 print(f"\nDev subset size: {len(snli_dev):,}")
