@@ -19,15 +19,27 @@ A model that scores well on SNLI but fails the non-entailment cases in HANS is r
 
 ## Results
 
-<!-- Fill in from your own run. Example layout: -->
+**DistilBERT reaches 87.0% on SNLI but only 50.1% on HANS, which is chance level.** It labelled 14,892 of the 15,000 HANS non-entailment pairs as "entailment": it has learned that shared words mean entailment rather than learning what the sentences mean.
 
-| Model | SNLI test accuracy | HANS accuracy | HANS non-entailment accuracy |
-|---|---|---|---|
-| TF-IDF + Logistic Regression | | | |
-| TF-IDF + Linear SVM | | | |
-| DistilBERT (SNLI) | | | |
+| Model | SNLI test accuracy | HANS accuracy |
+|---|---|---|
+| TF-IDF + Logistic Regression | 74.0% | 49.7% |
+| TF-IDF + Linear SVM | 74.7% | 49.5% |
+| DistilBERT (fine-tuned on SNLI) | **87.0%** | **50.1%** |
 
-![SNLI label distribution](figures/snli_label_distribution.png)
+![SNLI vs HANS accuracy by model](figures/model_comparison.png)
+
+DistilBERT's HANS accuracy split by heuristic and gold label: near-perfect when the shortcut points to the right answer (entailment) and near zero when it doesn't (non-entailment).
+
+| Heuristic | Entailment | Non-entailment |
+|---|---|---|
+| Lexical overlap | 100.0% | 0.0% |
+| Subsequence | 99.8% | 0.5% |
+| Constituent | 98.6% | 1.6% |
+
+![DistilBERT HANS accuracy by heuristic and label](figures/heuristic_heatmap.png)
+
+Results come from a single run (seed 42) on CPU: 3 epochs, best validation accuracy 87.8%.
 
 ## Run it
 
